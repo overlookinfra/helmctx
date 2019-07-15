@@ -24,8 +24,11 @@ SCRIPT_BASENAME="$( basename "$0" )"
 SCRIPT_REALPATH="$( readlink -f "$0" )"
 
 # Try to automatically detect Helm location if needed.
-HELMCTX_HELM_COMMAND="$( readlink -f "$( command -v ${HELMCTX_HELM} )" )"
 declare -a "HELMCTX_HELM_ARGS=( ${HELMCTX_HELM} )"
+HELMCTX_HELM_COMMAND="$( readlink -f "$( command -v "${HELMCTX_HELM_ARGS[0]}" )" )" || {
+    echo "$0: executable \`${HELMCTX_HELM_ARGS[0]}\` does not exist. Is helm installed?" >&2
+    exit 1
+}
 
 if [[ "${HELMCTX_HELM_COMMAND}" == "${SCRIPT_REALPATH}" ]]; then
     while IFS= read -r CANDIDATE; do
@@ -67,4 +70,4 @@ HELMCTX_HELM_ARGS=( "${HELMCTX_HELM_ARGS[@]:1}" )
 HELMCTX_HELM_ARGS+=( "$@" )
 
 # Run Helm using its new home directory.
-exec ${HELMCTX_HELM_COMMAND} "${HELMCTX_HELM_ARGS[@]}"
+exec "${HELMCTX_HELM_COMMAND}" "${HELMCTX_HELM_ARGS[@]}"
