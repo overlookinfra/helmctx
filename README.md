@@ -16,7 +16,13 @@ The `helmctx` command understands the following environment variables:
 
 * `HELMCTX_KUBECTL`: The path to the `kubectl` command. If not specified,
   attempts to find in `$PATH`.
-* `HELMCTX_HELM`: The path to the real `helm` command (see [below](#using-helmctx-as-helm)). If not specified, attempts to find in `$PATH`.
+* `HELMCTX_HELM`: The path to the real `helm` command (see
+  [below](#using-helmctx-as-helm)). If not specified, attempts to find in
+  `$PATH`.
+* `HELMCTX_AUTOTLS`: Automatically set up TLS in Helm by testing for the
+  existence of `key.pem` and `ca.pem` in `HELM_HOME`. Disable by setting to an
+  empty string, `0`, `false`, or `no`. Enable by setting to any other value.
+  Defaults to enabled.
 * `HELMCTX_BASEDIR`: The parent directory to use for Helm home directories.
   Defaults to `~/.local/share/helmctx`.
 

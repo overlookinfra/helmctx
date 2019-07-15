@@ -13,6 +13,7 @@ HELMCTX_HELM="${HELMCTX_HELM:-helm}"
 # Variables
 #
 
+HELMCTX_AUTOTLS="${HELMCTX_AUTOTLS-1}"
 HELMCTX_BASEDIR="${HELMCTX_BASEDIR:-${HOME}/.local/share/helmctx}"
 
 #
@@ -43,6 +44,23 @@ fi
 # Get the new Helm home from the kubectl context.
 CONTEXT="$( ${HELMCTX_KUBECTL} config current-context )"
 export HELM_HOME="${HELMCTX_BASEDIR}/${CONTEXT}"
+
+# Automatically set up TLS configuration if requested.
+case "${HELMCTX_AUTOTLS}" in
+''|0|false|no)
+    ;;
+*)
+    HELM_TLS_KEY="${HELM_TLS_KEY:-${HELM_HOME}/key.pem}"
+    if [[ -r "${HELM_TLS_KEY}" ]]; then
+        export HELM_TLS_ENABLE=1
+    fi
+
+    HELM_TLS_CA_CERT="${HELM_TLS_CA_CERT:-${HELM_HOME}/ca.pem}"
+    if [[ -r "${HELM_TLS_CA_CERT}" ]]; then
+        export HELM_TLS_VERIFY=1
+    fi
+    ;;
+esac
 
 # Add remaining arguments.
 HELMCTX_HELM_ARGS=( "${HELMCTX_HELM_ARGS[@]:1}" )
