@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set -euo pipefail
+
+#
+# Commands
+#
+
+HELMCTX_KUBECTL="${HELMCTX_KUBECTL:-kubectl}"
+HELMCTX_HELM="${HELMCTX_HELM:-helm}"
+
+#
+# Variables
+#
+
+HELMCTX_BASEDIR="${HELMCTX_BASEDIR:-${HOME}/.local/share/helmctx}"
+
+#
+#
+#
+
+SCRIPT_BASENAME="$( basename "$0" )"
+SCRIPT_REALPATH="$( readlink -f "$0" )"
+
+# Try to automatically detect Helm location if needed.
+HELMCTX_HELM_COMMAND="$( readlink -f "$( command -v ${HELMCTX_HELM} )" )"
+declare -a "HELMCTX_HELM_ARGS=( ${HELMCTX_HELM} )"
+
+if [[ "${HELMCTX_HELM_COMMAND}" == "${SCRIPT_REALPATH}" ]]; then
+    while IFS= read -r CANDIDATE; do
+        if [[ "$( readlink -f "${CANDIDATE}" )" != "${SCRIPT_REALPATH}" ]]; then
+            HELMCTX_HELM_COMMAND="${CANDIDATE}"
+            break
+        fi
+    done < <( which -a helm )
+
+    if [[ "${HELMCTX_HELM_COMMAND}" == "${SCRIPT_REALPATH}" ]]; then
+        echo "$0: helm binary not found on \$PATH. Is helm installed?" >&2
+        exit 1
+    fi
+fi
+
+# Get the new Helm home from the kubectl context.
+CONTEXT="$( ${HELMCTX_KUBECTL} config current-context )"
+export HELM_HOME="${HELMCTX_BASEDIR}/${CONTEXT}"
+
+# Add remaining arguments.
+HELMCTX_HELM_ARGS=( "${HELMCTX_HELM_ARGS[@]:1}" )
+HELMCTX_HELM_ARGS+=( "$@" )
+
+# Run Helm using its new home directory.
+exec ${HELMCTX_HELM_COMMAND} "${HELMCTX_HELM_ARGS[@]}"
